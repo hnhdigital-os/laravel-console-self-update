@@ -70,7 +70,7 @@ trait SelfUpdateTrait
 
         // Check for latest version.
         if (!$this->checkVersion()) {
-            $this->line('You are already up-to-date: <info>'.$this->release.'-'.$this->tag.'</info>');
+            $this->info('You are running the latest version!');
             $this->line('');
 
             return;
@@ -125,6 +125,7 @@ trait SelfUpdateTrait
         $this->latest_tag = trim($this->latest_tag);
 
         $this->line('Latest: <info>'.$this->latest_tag.'</info>');
+        $this->line('');
 
         return $this->tag !== $this->latest_tag;
     }
