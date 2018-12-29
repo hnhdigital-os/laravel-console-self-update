@@ -86,7 +86,7 @@ trait SelfUpdateTrait
      */
     protected function parseVersion()
     {
-        $this->version = config('app.version')
+        $this->version = config('app.version');
 
         list($release, $tag) = explode('-', $this->version, 2);
 
