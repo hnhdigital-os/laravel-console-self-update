@@ -23,12 +23,17 @@ trait SelfUpdateTrait
     /**
      * @var string
      */
+    protected $version;
+
+    /**
+     * @var string
+     */
     protected $release;
 
     /**
      * @var string
      */
-    protected $version;
+    protected $tag;
 
     /**
      * @var string
@@ -81,10 +86,12 @@ trait SelfUpdateTrait
      */
     protected function parseVersion()
     {
-        list($release, $version) = explode('-', config('app.version'), 2);
+        $this->version = config('app.version')
+
+        list($release, $tag) = explode('-', $this->version, 2);
 
         $this->release = $release;
-        $this->tag = $this->latest_tag = $version;
+        $this->tag = $this->latest_tag = $tag;
     }
 
     /**
