@@ -33,7 +33,7 @@ trait SelfUpdateTrait
     /**
      * @var string
      */
-    protected $latest_version;
+    protected $latest_tag;
 
     /**
      * Use public url to self-update.
@@ -57,7 +57,7 @@ trait SelfUpdateTrait
         $this->parseVersion();
 
         if (!empty($this->option('check-version'))) {
-            $this->line($this->release.'-'.$this->version);
+            $this->line($this->release.'-'.$this->tag);
             return;
         }
 
@@ -65,7 +65,7 @@ trait SelfUpdateTrait
 
         // Check for latest version.
         if (!$this->checkVersion()) {
-            $this->line('You are already up-to-date: <info>'.$this->release.'-'.$this->version.'</info>');
+            $this->line('You are already up-to-date: <info>'.$this->release.'-'.$this->tag.'</info>');
             $this->line('');
 
             return;
@@ -74,10 +74,17 @@ trait SelfUpdateTrait
         return $this->processUpdate();
     }
 
+    /**
+     * Parse the version.
+     *
+     * @return void
+     */
     protected function parseVersion()
     {
-        $this->release = stripos(config('app.release'), 'REPO-') === false ? config('app.release') : 'snapshot';
-        $this->version = $this->latest_version = stripos(config('app.release'), 'REPO-') === false ? config('app.version') : 'dev';
+        list($release, $version) = explode('-', config('app.version'), 2);
+
+        $this->release = $release;
+        $this->tag = $this->latest_tag = $version;
     }
 
     /**
@@ -87,30 +94,28 @@ trait SelfUpdateTrait
      */
     protected function checkVersion()
     {
-
         $this->line('Release: <info>'.$this->release.'</info>');
-        $this->line('Version: <info>'.$this->version.'</info>');
+        $this->line('Version: <info>'.$this->tag.'</info>');
 
         if (!$this->flysystem_adapter) {
             $this->line('Source: <info>'.$this->url.'</info>');
             $this->line('');
         }
 
-        // Version to install has been specified.
-        if (!empty($this->option('with-version'))) {
-            $this->release = $this->option('version') == 'snapshot' ? 'snapshot' : $this->release;
-            $this->latest_version = $this->option('version') == 'snapshot' ? '' : $this->option('version');
+        // Tag to install has been specified.
+        if (!empty($this->option('tag'))) {
+            $this->latest_tag = $this->release === 'stable' ? $this->option('tag') : '';
 
             return true;
         }
 
-        $this->latest_version = $this->readFile($this->release);
+        $this->latest_tag = $this->readFile('latest');
 
-        if ($this->latest_version === false) {
+        if ($this->latest_tag === false) {
             return false;
         }
 
-        return $this->version !== $this->latest_version;
+        return $this->tag !== $this->latest_tag;
     }
 
     /**
@@ -169,7 +174,7 @@ trait SelfUpdateTrait
         // Replace with the new binary.
         rename($temp_binary_path, $binary_path);
 
-        $this->line('You are now running the latest version: <info>'.$this->release.'-'.$this->latest_version.'</info>');
+        $this->line('You are now running the latest version: <info>'.$this->release.'-'.$this->latest_tag.'</info>');
     }
 
     /**
@@ -179,7 +184,7 @@ trait SelfUpdateTrait
      */
     protected function getTempPath($path)
     {
-        return sprintf('/tmp/%s.%s', basename($path), $this->version);
+        return sprintf('/tmp/%s.%s', basename($path), $this->tag);
     }
 
     /**
@@ -228,7 +233,7 @@ trait SelfUpdateTrait
      */
     protected function getBackupPath($path)
     {
-        return $path.'.'.$this->version;
+        return $path.'.'.$this->tag;
     }
 
     /**
@@ -276,15 +281,12 @@ trait SelfUpdateTrait
     {
         $version = exec(sprintf('%s self-update --check-version', $path));
 
-        if (empty($version)
-            || stripos($version, 'stable') === false
-            || stripos($version, 'snapshot') === false) {
-
+        if (empty($version)) {
             return false;
         }
 
         // Binary version should match what we're expecting to download.
-        return $version == $this->release.'-'.$this->latest_version;
+        return $version == $this->release.'-'.$this->latest_tag;
     }
 
     /**
