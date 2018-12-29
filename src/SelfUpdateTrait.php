@@ -122,6 +122,10 @@ trait SelfUpdateTrait
             return false;
         }
 
+        $this->latest_tag = trim($this->latest_tag);
+
+        $this->line('Latest: <info>'.$this->latest_tag.'</info>');
+
         return $this->tag !== $this->latest_tag;
     }
 
