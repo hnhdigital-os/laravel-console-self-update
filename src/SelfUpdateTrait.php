@@ -152,7 +152,7 @@ trait SelfUpdateTrait
         $this->backupCurrentBinary($binary_path);
 
         $versions = $this->readVersions();
-        $download_path = ltrim(array_get($versions, $this->release.'.path'), '/');
+        $download_path = ltrim(array_get($versions, $this->latest_tag.'.path'), '/');
 
         $temp_binary_path = $this->getTempPath($binary_path);
 
