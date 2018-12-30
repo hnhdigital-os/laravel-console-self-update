@@ -183,7 +183,7 @@ trait SelfUpdateTrait
         file_put_contents($temp_binary_path, $this->downloadUpdatedBinary($download_path));
 
         // Match the file permissions to current binary.
-        chmod($temp_binary_path, fileperms($current_binary_path));
+        chmod($temp_binary_path, substr(sprintf('%o', fileperms($current_binary_path)), -4));
 
         // Validate the binary.
         // Test that the binary "works" and returns the version we are expecting.
