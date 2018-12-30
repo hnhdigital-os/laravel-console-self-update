@@ -101,9 +101,6 @@ trait SelfUpdateTrait
      */
     protected function checkVersion()
     {
-        $this->line('Release: <info>'.$this->release.'</info>');
-        $this->line('Version: <info>'.$this->tag.'</info>');
-
         if (!$this->flysystem_adapter) {
             $this->line('Source: <info>'.$this->url.'</info>');
             $this->line('');
@@ -117,9 +114,6 @@ trait SelfUpdateTrait
         }
 
         $this->latest_tag = $this->getLatestTag();
-
-        $this->line('Latest: <info>'.$this->latest_tag.'</info>');
-        $this->line('');
 
         return $this->tag !== $this->latest_tag;
     }
@@ -179,6 +173,9 @@ trait SelfUpdateTrait
             return 1;
         }
 
+        $this->line('Installing update...');
+        $this->line('');
+
         // Save the updated binary to temp disk.
         file_put_contents($temp_binary_path, $this->downloadUpdatedBinary($download_path));
 
@@ -206,12 +203,16 @@ trait SelfUpdateTrait
             rename($temp_binary_path, $current_binary_path);
         }
 
-        // Verbose.
         $this->line(sprintf(
             'You are now running the latest version: <info>%s-%s</info>',
             $this->release,
             $this->latest_tag
         ));
+
+        $this->line('');
+
+        // Force exit.
+        exit(0);
     }
 
     /**
@@ -314,6 +315,8 @@ trait SelfUpdateTrait
      * Download updated binary.
      *
      * @return void
+     *
+     * @todo Check sha256 hash.
      */
     private function downloadUpdatedBinary($path)
     {
