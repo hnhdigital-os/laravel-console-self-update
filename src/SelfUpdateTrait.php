@@ -219,7 +219,7 @@ trait SelfUpdateTrait
      */
     protected function getTempPath($path)
     {
-        return sprintf('/tmp/%s.%s', basename($path), $this->tag);
+        return sprintf('/tmp/%s.%s', basename($path), $this->latest_tag);
     }
 
     /**
