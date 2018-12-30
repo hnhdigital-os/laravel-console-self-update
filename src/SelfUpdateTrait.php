@@ -189,7 +189,7 @@ trait SelfUpdateTrait
         // Test that the binary "works" and returns the version we are expecting.
         if (!$this->validateBinary($temp_binary_path)) {
             $this->error('Could not validate updated binary.');
-            //unlink($temp_binary_path);
+            unlink($temp_binary_path);
 
             return 1;
         }
@@ -254,6 +254,10 @@ trait SelfUpdateTrait
             $this->error('Can not write to parent path to backup.');
 
             return 1;
+        }
+
+        if ($this->release === 'RELEASE') {
+            return;
         }
 
         // Move current binary to backup path.
