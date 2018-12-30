@@ -383,9 +383,29 @@ trait SelfUpdateTrait
             exit(1);
         }
 
+        // Hash check failed.
+        if (!$this->checkHash($path, $file_contents)) {
+            $this->error('Checksum mismatch.');
+
+            exit(1);
+        }
+
+        return $file_contents;
+    }
+
+    /**
+     * Check hash for path/contents.
+     *
+     * @param string $path
+     * @param string $file_contents
+     *
+     * @return bool
+     */
+    public function checkHash($path, $file_contents)
+    {
         // Check if hash needs comparing.
         if (!$this->compareHash()) {
-            return $file_contents;
+            return true;
         }
 
         // File contents hash.
@@ -395,13 +415,12 @@ trait SelfUpdateTrait
         $checksums = $this->readJson($this->getHashPath());
 
         // Compare hashes.
-        if (!isset($checksums[$path]) || $hash !== $checksums[$path]) {
-            $this->error('Checksum mismatch.');
-
-            exit(1);
+        if (!isset($checksums[$path])
+            || $hash !== $checksums[$path]) {
+            return false;
         }
 
-        return $file_contents;
+        return true;
     }
 
     /**
