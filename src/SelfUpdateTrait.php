@@ -53,6 +53,32 @@ trait SelfUpdateTrait
     private $url = '';
 
     /**
+     * Set URL.
+     *
+     * @param string $url
+     *
+     * @param void
+     */
+    protected function setUrl($url)
+    {
+        $this->url = $url;
+        $this->flysystem_adapter = false;
+    }
+
+    /**
+     * Set the flysystem.
+     *
+     * @param Filesystem $adapter
+     *
+     * @return void
+     */
+    protected function setFlysystem(Filesystem $flysystem)
+    {
+        $this->flysystem = $flysystem;
+        $this->flysystem_adapter = true;
+    }
+
+    /**
      * Execute the command.
      *
      * @return void
@@ -115,41 +141,29 @@ trait SelfUpdateTrait
     }
 
     /**
+     * Get the path to the file referencing the latest tag.
+     *
+     * @return string
+     */
+    public function getLatestTagPath()
+    {
+        return 'latest';
+    }
+
+    /**
      * Get the latest tag.
      *
      * @return string
      */
     protected function getLatestTag()
     {
-        $tag = $this->readFile('latest');
+        $tag = $this->readFile($this->getLatestTagPath());
 
         if ($this->tag === false) {
             return false;
         }
 
         return trim($tag);
-    }
-
-    /**
-     * Set URL.
-     * 
-     * @param void
-     */
-    protected function setUrl($url)
-    {
-        $this->url = $url;
-        $this->flysystem_adapter = false;
-    }
-
-    /**
-     * Set the flysystem.
-     *
-     * @param Filesystem $adapter [description]
-     */
-    protected function setFlysystem(Filesystem $flysystem)
-    {
-        $this->flysystem = $flysystem;
-        $this->flysystem_adapter = true;
     }
 
     /**
@@ -211,6 +225,8 @@ trait SelfUpdateTrait
     /**
      * Get temp path.
      *
+     * @param string $path
+     *
      * @return string
      */
     protected function getTempPath($path)
@@ -230,6 +246,8 @@ trait SelfUpdateTrait
 
     /**
      * Backup binary.
+     *
+     * @param string $path
      *
      * @return void
      */
@@ -271,13 +289,25 @@ trait SelfUpdateTrait
     }
 
     /**
+     * Get the path to the version/path file.
+     *
+     * @return string
+     */
+    public function getVersionsPath()
+    {
+        return 'versions';
+    }
+
+    /**
      * Get the download path for the given tag.
+     *
+     * @param string $tag
      *
      * @return string
      */
     protected function getDownloadPath($tag)
     {
-        $versions = $this->readVersions();
+        $versions = $this->readJson($this->getVersionsPath());
 
         if (!isset($versions[$tag])) {
             return false;
@@ -287,29 +317,61 @@ trait SelfUpdateTrait
     }
 
     /**
-     * Read the versions file.
+     * Download and read a JSON file.
+     *
+     * @param string $path
      *
      * @return string
      */
-    protected function readVersions()
+    protected function readJson($path)
     {
-        $versions = json_decode($this->readFile('versions'), true);
+        $result = json_decode($this->readFile($path), true);
 
         if (json_last_error() !== JSON_ERROR_NONE) {
-            $this->error('Unable to decode the versions file');
+            $this->error(sprintf('Unable to decode %s', $path));
 
             exit(1);
         }
 
-        return $versions;
+        return $result;
+    }
+
+    /**
+     * Check hash of downloaded file.
+     *
+     * @return bool
+     */
+    public function compareHash()
+    {
+        return true;
+    }
+
+    /**
+     * Get the path to the hash file.
+     *
+     * @return string
+     */
+    public function getHashPath()
+    {
+        return 'checksum';
+    }
+
+    /**
+     * Check hash of downloaded file.
+     *
+     * @return string
+     */
+    public function getHashAlgo()
+    {
+        return 'sha256';
     }
 
     /**
      * Download updated binary.
      *
-     * @return void
+     * @param string $path
      *
-     * @todo Check sha256 hash.
+     * @return void
      */
     private function downloadUpdatedBinary($path)
     {
@@ -321,11 +383,31 @@ trait SelfUpdateTrait
             exit(1);
         }
 
+        // Check if hash needs comparing.
+        if (!$this->compareHash()) {
+            return $file_contents;
+        }
+
+        // File contents hash.
+        $hash = hash($this->getHashAlgo(), $file_contents);
+
+        // Get the checksums json file.
+        $checksums = $this->readJson($this->getHashPath());
+
+        // Compare hashes.
+        if (!isset($checksums[$path]) || $hash !== $checksums[$path]) {
+            $this->error('Checksum mismatch.');
+
+            exit(1);
+        }
+
         return $file_contents;
     }
 
     /**
      * Validate binary.
+     *
+     * @param string $path
      *
      * @return bool
      */
