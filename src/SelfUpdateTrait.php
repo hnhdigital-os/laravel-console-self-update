@@ -229,7 +229,7 @@ trait SelfUpdateTrait
      *
      * @return string
      */
-    protected function getTempPath($path)
+    public function getTempPath($path)
     {
         return sprintf('/tmp/%s.%s', basename($path), $this->latest_tag);
     }
@@ -251,7 +251,7 @@ trait SelfUpdateTrait
      *
      * @return void
      */
-    private function backupCurrentBinary($path)
+    public function backupCurrentBinary($path)
     {
         // Current file path is not writable.
         if (!is_writable($path)) {
@@ -283,7 +283,7 @@ trait SelfUpdateTrait
      *
      * @return string
      */
-    protected function getBackupPath($path)
+    public function getBackupPath($path)
     {
         return $path.'.'.$this->tag;
     }
@@ -305,7 +305,7 @@ trait SelfUpdateTrait
      *
      * @return string
      */
-    protected function getDownloadPath($tag)
+    public function getDownloadPath($tag)
     {
         $versions = $this->readJson($this->getVersionsPath());
 
@@ -323,7 +323,7 @@ trait SelfUpdateTrait
      *
      * @return string
      */
-    protected function readJson($path)
+    private function readJson($path)
     {
         $result = json_decode($this->readFile($path), true);
 
@@ -411,7 +411,7 @@ trait SelfUpdateTrait
      *
      * @return bool
      */
-    private function validateBinary($path)
+    public function validateBinary($path)
     {
         $version = exec(sprintf('%s self-update --check-version', $path));
 
