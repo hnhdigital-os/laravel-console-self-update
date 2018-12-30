@@ -116,18 +116,28 @@ trait SelfUpdateTrait
             return true;
         }
 
-        $this->latest_tag = $this->readFile('latest');
-
-        if ($this->latest_tag === false) {
-            return false;
-        }
-
-        $this->latest_tag = trim($this->latest_tag);
+        $this->latest_tag = $this->getLatestTag();
 
         $this->line('Latest: <info>'.$this->latest_tag.'</info>');
         $this->line('');
 
         return $this->tag !== $this->latest_tag;
+    }
+
+    /**
+     * Get the latest tag.
+     *
+     * @return string
+     */
+    protected function getLatestTag()
+    {
+        $tag = $this->readFile('latest');
+
+        if ($this->tag === false) {
+            return false;
+        }
+
+        return trim($tag);
     }
 
     /**
@@ -159,34 +169,47 @@ trait SelfUpdateTrait
      */
     private function processUpdate()
     {
-        $binary_path = $this->getBinaryPath();
+        $current_binary_path = $this->getBinaryPath();
+        $temp_binary_path = $this->getTempPath($current_binary_path);
 
-        $this->backupCurrentBinary($binary_path);
+        // Get the download path for the updated binary.
+        if (($download_path = $this->getDownloadPath($this->latest_tag)) === false) {
+            $this->error('Could not get path to download.');
 
-        $versions = $this->readVersions();
-        $download_path = ltrim(array_get($versions, $this->latest_tag.'.path'), '/');
-
-        $temp_binary_path = $this->getTempPath($binary_path);
-
-        file_put_contents($temp_binary_path, $this->downloadUpdatedBinary($download_path));
-
-        // Match mod.
-        chmod($temp_binary_path, fileperms($binary_path));
-
-        if (!$this->validateBinary($temp_binary_path)) {
-            $this->error('Could not validate update.');
-            unlink($temp_binary_path);
-
-            exit(1);
+            return 1;
         }
 
-        // Remove existing binary.
-        unlink($binary_path);
+        // Save the updated binary to temp disk.
+        file_put_contents($temp_binary_path, $this->downloadUpdatedBinary($download_path));
+
+        // Match the file permissions to current binary.
+        chmod($temp_binary_path, fileperms($current_binary_path));
+
+        // Validate the binary.
+        // Test that the binary "works" and returns the version we are expecting.
+        if (!$this->validateBinary($temp_binary_path)) {
+            $this->error('Could not validate updated binary.');
+            unlink($temp_binary_path);
+
+            return 1;
+        }
+
+        // Backup the current binary.
+        if (($error_code = $this->backupCurrentBinary($current_binary_path)) > 0) {
+            unlink($temp_binary_path);
+
+            return $error_code;
+        }
 
         // Replace with the new binary.
-        rename($temp_binary_path, $binary_path);
+        rename($temp_binary_path, $current_binary_path);
 
-        $this->line('You are now running the latest version: <info>'.$this->release.'-'.$this->latest_tag.'</info>');
+        // Verbose.
+        $this->line(sprintf(
+            'You are now running the latest version: <info>%s-%s</info>',
+            $this->release,
+            $this->latest_tag
+        ));
     }
 
     /**
@@ -216,24 +239,23 @@ trait SelfUpdateTrait
      */
     private function backupCurrentBinary($path)
     {
+        // Current file path is not writable.
         if (!is_writable($path)) {
             $this->error('Can not self-update - not writable.');
 
-            exit(1);
+            return 1;
         }
 
+        // Current path parent folder is not writable.
         if (!is_writable(dirname($path))) {
             throw new \Exception('');
             $this->error('Can not write to parent path to backup.');
 
-            exit(1);
+            return 1;
         }
 
-        // Copy file.
-        copy($path, $this->getBackupPath($path));
-
-        // Match mod.
-        chmod($this->getBackupPath($path), fileperms($path));
+        // Move current binary to backup path.
+        rename($path, $this->getBackupPath($path));
     }
 
     /**
@@ -246,6 +268,18 @@ trait SelfUpdateTrait
     protected function getBackupPath($path)
     {
         return $path.'.'.$this->tag;
+    }
+
+    /**
+     * Get the download path for the given tag.
+     *
+     * @return string
+     */
+    protected function getDownloadPath($tag)
+    {
+        $versions = $this->readVersions();
+
+        return ltrim(array_get($versions, $tag.'.path', false), '/');
     }
 
     /**
@@ -297,7 +331,7 @@ trait SelfUpdateTrait
             return false;
         }
 
-        // Binary version should match what we're expecting to download.
+        // Binary version should match what we are expecting to download.
         return $version == $this->release.'-'.$this->latest_tag;
     }
 
