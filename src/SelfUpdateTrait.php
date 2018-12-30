@@ -183,13 +183,13 @@ trait SelfUpdateTrait
         file_put_contents($temp_binary_path, $this->downloadUpdatedBinary($download_path));
 
         // Match the file permissions to current binary.
-        chmod($temp_binary_path, substr(sprintf('%o', fileperms($current_binary_path)), -4));
+        chmod($temp_binary_path, fileperms($current_binary_path));
 
         // Validate the binary.
         // Test that the binary "works" and returns the version we are expecting.
         if (!$this->validateBinary($temp_binary_path)) {
             $this->error('Could not validate updated binary.');
-            unlink($temp_binary_path);
+            //unlink($temp_binary_path);
 
             return 1;
         }
@@ -201,8 +201,10 @@ trait SelfUpdateTrait
             return $error_code;
         }
 
-        // Replace with the new binary.
-        rename($temp_binary_path, $current_binary_path);
+        if ($this->release !== 'RELEASE') {
+            // Replace with the new binary.
+            rename($temp_binary_path, $current_binary_path);
+        }
 
         // Verbose.
         $this->line(sprintf(
@@ -279,7 +281,11 @@ trait SelfUpdateTrait
     {
         $versions = $this->readVersions();
 
-        return ltrim(array_get($versions, $tag.'.path', false), '/');
+        if (!isset($versions[$tag])) {
+            return false;
+        }
+
+        return ltrim(array_get($versions[$tag], 'path', false), '/');
     }
 
     /**
@@ -331,8 +337,10 @@ trait SelfUpdateTrait
             return false;
         }
 
+        list($release, $tag) = explode('-', $version, 2);
+
         // Binary version should match what we are expecting to download.
-        return $version == $this->release.'-'.$this->latest_tag;
+        return $tag === $this->latest_tag;
     }
 
     /**
@@ -347,9 +355,11 @@ trait SelfUpdateTrait
         try {
             if ($this->flysystem_adapter) {
                 return $this->flysystem->read($path);
-            } else {
-                return file_get_contents($this->url.'/'.$path);
             }
+
+            $url = sprintf('%s/%s?%s', $this->url, $path, time());
+
+            return file_get_contents($url);
         } catch (\Exception $exception) {
             $this->error('Could not read '.$path);
 
