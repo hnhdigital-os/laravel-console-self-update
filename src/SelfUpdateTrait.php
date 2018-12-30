@@ -66,12 +66,9 @@ trait SelfUpdateTrait
             return;
         }
 
-        $this->line('');
-
         // Check for latest version.
         if (!$this->checkVersion()) {
             $this->info('You are running the latest version!');
-            $this->line('');
 
             return;
         }
@@ -103,7 +100,6 @@ trait SelfUpdateTrait
     {
         if (!$this->flysystem_adapter) {
             $this->line('Source: <info>'.$this->url.'</info>');
-            $this->line('');
         }
 
         // Tag to install has been specified.
@@ -174,7 +170,6 @@ trait SelfUpdateTrait
         }
 
         $this->line('Installing update...');
-        $this->line('');
 
         // Save the updated binary to temp disk.
         file_put_contents($temp_binary_path, $this->downloadUpdatedBinary($download_path));
@@ -208,8 +203,6 @@ trait SelfUpdateTrait
             $this->release,
             $this->latest_tag
         ));
-
-        $this->line('');
 
         // Force exit.
         exit(0);
