@@ -2,7 +2,7 @@
 
 namespace HnhDigital\LaravelConsoleSelfUpdate;
 
-/**
+/*
  * This file is part of Laravel Console Self Update package.
  *
  * (c) H&H Digital
@@ -56,7 +56,6 @@ trait SelfUpdateTrait
      * Set URL.
      *
      * @param string $url
-     *
      * @param void
      */
     protected function setUrl($url)
@@ -89,6 +88,7 @@ trait SelfUpdateTrait
 
         if (!empty($this->option('check-version'))) {
             $this->line($this->release.'-'.$this->tag);
+
             return;
         }
 
