@@ -173,7 +173,7 @@ trait SelfUpdateTrait
      */
     private function processUpdate()
     {
-        $current_binary_path = $this->getBinaryPath();
+        $current_binary_path = $this->getCurrentBinaryFilePath();
         $temp_binary_path = $this->getTempPath($current_binary_path);
 
         // Get the download path for the updated binary.
@@ -239,7 +239,7 @@ trait SelfUpdateTrait
      *
      * @return string
      */
-    private function getBinaryPath()
+    private function getCurrentBinaryFilePath()
     {
         return realpath($_SERVER['argv'][0]) ?: $_SERVER['argv'][0];
     }
