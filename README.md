@@ -9,6 +9,11 @@
 
 Provides a trait to provide self-updating for Laravel Zero console applications.
 
+[![Latest Stable Version](https://img.shields.io/github/release/hnhdigital-os/laravel-console-self-update.svg)](https://travis-ci.org/hnhdigital-os/laravel-console-self-update) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) [![Donate to this project using Patreon](https://img.shields.io/badge/patreon-donate-yellow.svg)](https://patreon.com/RoccoHoward)
+
+[![Build Status](https://travis-ci.com/hnhdigital-os/laravel-console-self-update.svg?branch=master)](https://travis-ci.com/hnhdigital-os/laravel-console-self-update) [![StyleCI](https://styleci.io/repos/163498842/shield?branch=master)](https://styleci.io/repos/163498842) [![Test Coverage](https://codeclimate.com/github/hnhdigital-os/laravel-console-self-update/badges/coverage.svg)](https://codeclimate.com/github/hnhdigital-os/laravel-console-self-update/coverage) [![Issue Count](https://codeclimate.com/github/hnhdigital-os/laravel-console-self-update/badges/issue_count.svg)](https://codeclimate.com/github/hnhdigital-os/laravel-console-self-update) [![Code Climate](https://codeclimate.com/github/hnhdigital-os/laravel-console-self-update/badges/gpa.svg)](https://codeclimate.com/github/hnhdigital-os/laravel-console-self-update)
+
+
 This package has been developed by H&H|Digital, an Australian botique developer. Visit us at hnh.digital.
 
 ## Requirements
