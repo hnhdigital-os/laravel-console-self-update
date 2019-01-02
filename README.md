@@ -114,7 +114,7 @@ For example:
 
 ### Hash comparing
 
-The downloaded file is hash checked (SHA256). This hash string buy default is found in the same path as the download file path (download/1.0.1/sha256).
+The downloaded file is hash checked (SHA256). This hash string by default is found in the same path as the download file path (download/1.0.1/sha256).
 
 You can change the default source by overriding the `setHashSource` method and returning a different constant.
 
