@@ -150,7 +150,7 @@ trait SelfUpdateTrait
      * Set the current version.
      *
      * @param string $current_tag
-     * 
+     *
      * @return void
      */
     public function setCurrentVersion($current_version)
@@ -291,6 +291,8 @@ trait SelfUpdateTrait
      * Get binary path.
      *
      * @return string
+     *
+     * @SuppressWarnings(PHPMD.Superglobals)
      */
     private function getCurrentBinaryFilePath()
     {
@@ -332,7 +334,7 @@ trait SelfUpdateTrait
     /**
      * Get the hash source.
      *
-     * @return bool
+     * @return string|bool
      */
     public function getHashSource()
     {
@@ -488,6 +490,8 @@ trait SelfUpdateTrait
      * Process update.
      *
      * @return void
+     *
+     * @SuppressWarnings(PHPMD.ExitExpression)
      */
     private function processUpdate()
     {
@@ -504,7 +508,15 @@ trait SelfUpdateTrait
         $this->line('Installing update...');
 
         // Save the updated binary to temp disk.
-        file_put_contents($temp_binary_path, $this->downloadUpdatedBinary($download_path));
+        $file_contents = $this->downloadUpdatedBinary($download_path);
+
+        if (empty($file_contents)) {
+            $this->error('Downloaded file is empty.');
+
+            return 1;
+        }
+
+        file_put_contents($temp_binary_path, $file_contents);
 
         // Match the file permissions to current binary.
         chmod($temp_binary_path, fileperms($current_binary_path));
@@ -581,7 +593,11 @@ trait SelfUpdateTrait
      */
     public function readDownloadPath($tag)
     {
-        $this->version_data = $this->readJson($this->getVersionsPath());
+        if (($version_data = $this->readJson($this->getVersionsPath())) === false) {
+            return false;
+        }
+
+        $this->version_data = $version_data;
 
         // Tag not found.
         if (!isset($this->version_data[$tag])) {
@@ -615,14 +631,14 @@ trait SelfUpdateTrait
         if (mb_strlen($file_contents) === 0) {
             $this->error('Downloaded file is empty.');
 
-            exit(1);
+            return false;
         }
 
         // Hash check failed.
         if (!$this->compareHash($path, $file_contents)) {
             $this->error('Hash mismatch.');
 
-            exit(1);
+            return false;
         }
 
         return $file_contents;
@@ -674,7 +690,9 @@ trait SelfUpdateTrait
     {
         // Top level json encoded file.
         if ($this->getHashSource() === self::CHECKSUM_TOP_LEVEL) {
-            $checksums = $this->readJson($this->getHashPath());
+            if (($checksums = $this->readJson($this->getHashPath())) === false) {
+                return false;
+            }
 
             if (!isset($checksums[$this->getLatestTag()])) {
                 return false;
@@ -714,6 +732,7 @@ trait SelfUpdateTrait
 
         // Parse provided version before comparing.
         list($release, $tag) = $this->parseVersion($version);
+        unset($release);
 
         // Binary tag should match what we are expecting to download.
         return $this->latest_tag === $tag;
@@ -733,7 +752,7 @@ trait SelfUpdateTrait
         if (json_last_error() !== JSON_ERROR_NONE) {
             $this->error(sprintf('Unable to decode %s', $path));
 
-            exit(1);
+            return false;
         }
 
         return $result;

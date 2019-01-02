@@ -40,8 +40,8 @@
       "@phpmd"
     ],
     "phpunit": "phpunit",
-    "phpcs": "phpcs -p -s --standard=PSR2 ./app ./tests",
-    "phpmd": "phpmd ./app text phpmd.xml"
+    "phpcs": "phpcs -p -s --standard=PSR2 ./src ./tests",
+    "phpmd": "phpmd ./src text phpmd.xml"
   },
   "minimum-stability": "dev",
   "prefer-stable": true
