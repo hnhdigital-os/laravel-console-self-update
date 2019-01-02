@@ -407,7 +407,7 @@ trait SelfUpdateTrait
         $this->setCurrentTag($tag);
 
         if (!empty($this->option('check-version'))) {
-            $this->line($this->release.'-'.$this->getCurrentTag());
+            $this->line($release.'-'.$this->getCurrentTag());
 
             return;
         }
@@ -460,7 +460,7 @@ trait SelfUpdateTrait
 
         // Tag to install has been specified.
         if (!empty($this->option('tag'))) {
-            $this->setLatestTag($this->release === 'stable' ? $this->option('tag') : '');
+            $this->setLatestTag($this->getCurrentRelease() === 'stable' ? $this->option('tag') : '');
 
             return true;
         }
@@ -502,7 +502,7 @@ trait SelfUpdateTrait
         $temp_binary_path = $this->getTempPath($current_binary_path, $this->getLatestTag());
 
         // Get the download path for the updated binary.
-        if (($download_path = $this->readDownloadPath($this->latest_tag)) === false) {
+        if (($download_path = $this->readDownloadPath($this->getLatestTag())) === false) {
             $this->error('Could not get path to download.');
 
             return 1;
@@ -540,15 +540,15 @@ trait SelfUpdateTrait
             return $error_code;
         }
 
-        if ($this->release !== 'RELEASE') {
+        if ($this->getCurrentRelease() !== 'RELEASE') {
             // Replace with the new binary.
             rename($temp_binary_path, $current_binary_path);
         }
 
         $this->line(sprintf(
             'You are now running the latest version: <info>%s-%s</info>',
-            $this->release,
-            $this->latest_tag
+            $this->getCurrentRelease(),
+            $this->getLatestTag()
         ));
 
         // Force exit.
@@ -579,7 +579,7 @@ trait SelfUpdateTrait
             return 1;
         }
 
-        if ($this->release === 'RELEASE') {
+        if ($this->getCurrentRelease() === 'RELEASE') {
             return;
         }
 
@@ -748,7 +748,7 @@ trait SelfUpdateTrait
         unset($release);
 
         // Binary tag should match what we are expecting to download.
-        return $this->latest_tag === $tag;
+        return $this->getLatestTag() === $tag;
     }
 
     /**
