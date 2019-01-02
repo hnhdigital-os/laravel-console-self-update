@@ -465,7 +465,12 @@ trait SelfUpdateTrait
             return true;
         }
 
-        $this->setLatestTag($this->readLatestTag());
+        // Get latest tag.
+        if (($latest_tag = $this->readLatestTag()) === false) {
+            return false;
+        }
+
+        $this->setLatestTag($latest_tag);
 
         return $this->getCurrentTag() !== $this->getLatestTag();
     }
@@ -477,13 +482,11 @@ trait SelfUpdateTrait
      */
     public function readLatestTag()
     {
-        $tag = $this->readFile($this->getLatestTagPath());
-
-        if ($this->getCurrentTag() === false) {
+        if (($latest_tag = $this->readFile($this->getLatestTagPath())) === false) {
             return false;
         }
 
-        return trim($tag);
+        return trim($latest_tag);
     }
 
     /**
