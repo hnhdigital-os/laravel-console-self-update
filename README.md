@@ -29,7 +29,7 @@ This package has been developed by H&H|Digital, an Australian botique developer.
 
 This package is implemented through a trait and an interface (for the constants).
 
-The basic implementation requires setting a base URL (`setUrl`) or providing a flysystem adapter (`setFlysystem`) before calling the `runSelfUpdate` method.
+The basic implementation requires setting a base URL `setUrl` or providing a flysystem adapter `setFlysystem` before calling the `runSelfUpdate` method.
 
 Binary versioning is implemented using BRANCH-TAG (eg stable-1.00) but will fallback to TAG (1.0.0) for the more common Laravel Zero version approach.
 
@@ -81,7 +81,7 @@ The script checks `/latest` for the latest tag (eg it would contain 1.0.1).
 
 ### Download path to binary
 
-The download path for a specific binary version is sourced from a JSON encoded values sourced from `/versions`.
+The download path for a specific binary version is sourced from a JSON encoded values sourced from `/versions` (default). You can override that by using `setVersionsPath`.
 
 ```json
 {
