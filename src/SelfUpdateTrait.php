@@ -443,7 +443,7 @@ trait SelfUpdateTrait
 
         return [
             $release,
-            $tag
+            $tag,
         ];
     }
 

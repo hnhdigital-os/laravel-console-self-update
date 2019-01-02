@@ -40,21 +40,21 @@ class SelfUpdateTest extends TestCase
     {
         $command = new MockCommand();
         $command->setCurrentTag('1.0.0');
-        
+
         $this->assertEquals('mysql-helper.1.0.0', $command->getBackupPath('mysql-helper'));
     }
 
     public function testTempPath()
     {
         $command = new MockCommand();
-        
+
         $this->assertEquals('/tmp/mysql-helper.1.0.0', $command->getTempPath('mysql-helper', '1.0.0'));
     }
 
     public function testLatestTagPath()
     {
         $command = new MockCommand();
-        
+
         $this->assertEquals('latest', $command->getLatestTagPath());
 
         $command->setLatestTagPath('latest.json');
@@ -64,9 +64,9 @@ class SelfUpdateTest extends TestCase
     public function testVersionsPath()
     {
         $command = new MockCommand();
-        
+
         $this->assertEquals('versions', $command->getVersionsPath());
-        
+
         $command->setVersionsPath('version.json');
         $this->assertEquals('version.json', $command->getVersionsPath());
     }

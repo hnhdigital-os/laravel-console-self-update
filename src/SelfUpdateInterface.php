@@ -4,7 +4,6 @@ namespace HnhDigital\LaravelConsoleSelfUpdate;
 
 interface SelfUpdateInterface
 {
-
     /**
      * Checksum checking disabled.
      *
