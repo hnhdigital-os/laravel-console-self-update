@@ -609,11 +609,21 @@ trait SelfUpdateTrait
 
         // Default format is "1.0.0": "download/1.0.0/binary-example"
         if ($this->getVersionsTagKey() === false) {
+            // Check before we trim.
+            if (!is_string($this->version_data[$tag])) {
+                return false;
+            }
+
             return ltrim($this->version_data[$tag], '/');
         }
 
         if (!isset($this->version_data[$tag])
             || !isset($this->version_data[$tag][$this->getVersionsTagKey()])) {
+            return false;
+        }
+
+        // Check before we trim.
+        if (!is_string($this->version_data[$tag][$this->getVersionsTagKey()])) {
             return false;
         }
 
