@@ -27,11 +27,11 @@ This package has been developed by H&H|Digital, an Australian botique developer.
 
 ## Implementation
 
-This package is implemented through a trait.
+This package is implemented through a trait and an interface (for the constants).
 
-Basic setup requires setting a base URL (setUrl) or providing a flysystem adapter (setFlysystem) before calling the `runSelfUpdate` method.
+The basic implementation requires setting a base URL (`setUrl`) or providing a flysystem adapter (`setFlysystem`) before calling the `runSelfUpdate` method.
 
-Binary version is implemented as BRANCH-TAG (eg stable-1.00) but will fallback to TAG (1.0.0).
+Binary versioning is implemented using BRANCH-TAG (eg stable-1.00) but will fallback to TAG (1.0.0) for the more common Laravel Zero version approach.
 
 ```php
 <?php
@@ -90,7 +90,7 @@ The download path for a specific binary version is sourced from a JSON encoded v
 }
 ```
 
-By default, the versions file is tag/path. If the versions file contains more than the path, the default path source can be overridden to a specific key using `getVersionsTagKey`.
+By default, the versions file is tag/path. If the versions file contains more than the path, the default path source can be overridden to a specific key using `setVersionsTagKey`.
 
 For example:
 
@@ -116,9 +116,11 @@ For example:
 
 The downloaded file is hash checked (SHA256). This hash string buy default is found in the same path as the download file path (download/1.0.1/sha256).
 
-You can change the default source by overriding the `compareHash` method and returning a different constant.
+You can change the default source by overriding the `setHashSource` method and returning a different constant.
 
-Top level json encoded file: (CHECKSUM_TOP_LEVEL);
+If there is a top level json encoded file storing the hashes, set the source to `CHECKSUM_TOP_LEVEL`. Specify the file path by using `setHashPath`.
+
+NOTE: This array is keyed to the download path discovered through the versions file. It must match to be able to retrieve the hash.
 
 ```php
 ...
@@ -139,7 +141,7 @@ Top level json encoded file: (CHECKSUM_TOP_LEVEL);
 }
 ```
 
-Hash included in the versions file (CHECKSUM_VERSIONS);
+If the hash is included in the versions file, set the source to `CHECKSUM_VERSIONS`. Specify the array key using `setHashPath`.
 
 ```php
 ...
@@ -147,7 +149,7 @@ Hash included in the versions file (CHECKSUM_VERSIONS);
     {
         ...
         $this->setHashSource(self::CHECKSUM_VERSIONS);
-        $this->setHashPath('checksums');
+        $this->setHashPath('sha256');
         ...
     }
 ...
@@ -159,6 +161,13 @@ Hash included in the versions file (CHECKSUM_VERSIONS);
     "1.0.1": {"path": "download/1.0.1/example-file", "sha256": "..."}
 }
 ```
+
+## Build scripts
+
+Looking for a build script to help create all the necessary files?
+
+* [fs-watcher](https://github.com/hnhdigital-os/fs-watcher/blob/master/build.sh)
+* [mysql-helper](https://github.com/hnhdigital-os/mysql-helper/blob/master/build.sh)
 
 ## Contributing
 
