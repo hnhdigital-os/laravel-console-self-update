@@ -53,6 +53,11 @@ trait SelfUpdateTrait
     private $url = '';
 
     /**
+     * @var array
+     */
+    protected $version_data;
+
+    /**
      * Set URL.
      *
      * @param string $url
@@ -84,7 +89,10 @@ trait SelfUpdateTrait
      */
     public function runSelfUpdate()
     {
-        $this->parseVersion();
+        // Set version, release, and tag.
+        $this->version = config('app.version');
+        list($this->release, $this->tag) = $this->parseVersion($this->version);
+        $this->latest_tag = $this->tag;
 
         if (!empty($this->option('check-version'))) {
             $this->line($this->release.'-'.$this->tag);
@@ -105,16 +113,29 @@ trait SelfUpdateTrait
     /**
      * Parse the version.
      *
+     * @param string $version
+     *
      * @return void
      */
-    protected function parseVersion()
+    protected function parseVersion($version)
     {
-        $this->version = config('app.version');
+        $parsed_version = explode('-', $version, 2);
 
-        list($release, $tag) = explode('-', $this->version, 2);
+        if (count($parsed_version) == 1) {
+            $release = 'stable';
+            $tag = $parsed_version[0];
 
-        $this->release = $release;
-        $this->tag = $this->latest_tag = $tag;
+            return;
+        } elseif (count($parsed_version) == 2) {
+            $release = $parsed_version[0];
+            $tag = $parsed_version[1];
+        }
+
+        return [
+            $version,
+            $release,
+            $tag
+        ];
     }
 
     /**
@@ -299,6 +320,16 @@ trait SelfUpdateTrait
     }
 
     /**
+     * Overridden default. Get the key for the versions download path.
+     *
+     * @return bool|string
+     */
+    public function getVersionsTagKey()
+    {
+        return false;
+    }
+
+    /**
      * Get the download path for the given tag.
      *
      * @param string $tag
@@ -307,13 +338,19 @@ trait SelfUpdateTrait
      */
     public function getDownloadPath($tag)
     {
-        $versions = $this->readJson($this->getVersionsPath());
+        $this->version_data = $this->readJson($this->getVersionsPath());
 
-        if (!isset($versions[$tag])) {
+        // Tag not found.
+        if (!isset($this->version_data[$tag])) {
             return false;
         }
 
-        return ltrim(array_get($versions[$tag], 'path', false), '/');
+        // Default format is "1.0.0": "download/1.0.0/binary-example"
+        if ($this->getVersionsTagKey() === false) {
+            return ltrim($this->version_data[$tag], '/');
+        }
+
+        return ltrim(array_get($this->version_data[$tag], $this->getVersionsTagKey(), false), '/');
     }
 
     /**
@@ -343,7 +380,7 @@ trait SelfUpdateTrait
      */
     public function compareHash()
     {
-        return true;
+        return self::CHECKSUM_BINARY_LEVEL;
     }
 
     /**
@@ -353,7 +390,7 @@ trait SelfUpdateTrait
      */
     public function getHashPath()
     {
-        return 'checksum';
+        return 'sha256';
     }
 
     /**
@@ -385,7 +422,7 @@ trait SelfUpdateTrait
 
         // Hash check failed.
         if (!$this->checkHash($path, $file_contents)) {
-            $this->error('Checksum mismatch.');
+            $this->error('Hash mismatch.');
 
             exit(1);
         }
@@ -404,23 +441,52 @@ trait SelfUpdateTrait
     public function checkHash($path, $file_contents)
     {
         // Check if hash needs comparing.
-        if (!$this->compareHash()) {
+        if ($this->compareHash() === self::CHECKSUM_DISABLED) {
             return true;
         }
 
         // File contents hash.
-        $hash = hash($this->getHashAlgo(), $file_contents);
+        $current_hash = hash($this->getHashAlgo(), $file_contents);
 
-        // Get the checksums json file.
-        $checksums = $this->readJson($this->getHashPath());
+        $provided_hash = $this->getUpdatedBinaryHash($path);
 
-        // Compare hashes.
-        if (!isset($checksums[$path])
-            || $hash !== $checksums[$path]) {
-            return false;
+        if ($provided_hash === false) {
+            $this->error('Hash not available.');
+
+            exit(1);
         }
 
-        return true;
+        // Compare hashes.
+        return $current_hash === $provided_hash;
+    }
+
+    /**
+     * Get the hash for the updated binary.
+     *
+     * @param string $path
+     *
+     * @return string
+     */
+    private function getUpdatedBinaryHash($path)
+    {
+        // Top level json encoded file.
+        if ($this->compareHash() === self::CHECKSUM_TOP_LEVEL) {
+            $checksums = $this->readJson($this->getHashPath());
+
+            return array_get($checksums, $path, false);
+        }
+
+        // Hash found in versions file.
+        if ($this->compareHash() === self::CHECKSUM_VERSIONS) {
+            if (!isset($this->version_data[$this->latest_tag])) {
+                return false;
+            }
+
+            return array_get($this->version_data[$this->latest_tag], $this->getHashPath(), false);
+        }
+
+        // Single file containing hash in the download path of the binary.
+        return $this->readFile(basename($path).'/'.$this->getHashPath());
     }
 
     /**
@@ -438,10 +504,11 @@ trait SelfUpdateTrait
             return false;
         }
 
-        list($release, $tag) = explode('-', $version, 2);
 
-        // Binary version should match what we are expecting to download.
-        return $tag === $this->latest_tag;
+        list($release, $tag) = $this->parseVersion($version);
+
+        // Binary tag should match what we are expecting to download.
+        return $this->latest_tag === $tag;
     }
 
     /**
