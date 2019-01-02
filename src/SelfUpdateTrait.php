@@ -508,7 +508,7 @@ trait SelfUpdateTrait
             return 1;
         }
 
-        $this->line('Installing update...');
+        $this->line(sprintf('Installing %s update...', $this->getLatestTag()));
 
         // Save the updated binary to temp disk.
         $file_contents = $this->downloadUpdatedBinary($download_path);
