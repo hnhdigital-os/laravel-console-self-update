@@ -514,7 +514,7 @@ trait SelfUpdateTrait
         $file_contents = $this->downloadUpdatedBinary($download_path);
 
         if (empty($file_contents)) {
-            $this->error('Downloaded file is empty.');
+            $this->error('Failed to download file.');
 
             return 1;
         }
@@ -707,11 +707,11 @@ trait SelfUpdateTrait
                 return false;
             }
 
-            if (!isset($checksums[$this->getLatestTag()])) {
+            if (!isset($checksums[$path])) {
                 return false;
             }
 
-            return $checksums[$this->getLatestTag()];
+            return $checksums[$path];
         }
 
         // Hash found in versions file.
