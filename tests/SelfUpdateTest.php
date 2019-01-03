@@ -94,8 +94,8 @@ class SelfUpdateTest extends TestCase
         $this->assertTrue($command->compareHash('', 'testing'));
 
         $checksums = [
-            '1.0.0' => '9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08',
-            '1.0.1' => $hash,
+            'download/1.0.0/mysql-helper' => '9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08',
+            'download/1.0.1/mysql-helper' => $hash,
         ];
 
         $tmp_file = tempnam('/tmp', 'mysql-helper-checksums');
@@ -103,7 +103,7 @@ class SelfUpdateTest extends TestCase
         $command->setHashSource(SelfUpdateInterface::CHECKSUM_TOP_LEVEL);
         $command->setHashPath($tmp_file);
 
-        $this->assertTrue($command->compareHash('', 'testing'));
+        $this->assertTrue($command->compareHash('download/1.0.1/mysql-helper', 'testing'));
 
         $command->setVersionData([
             '1.0.0' => ['sha256' => '9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08'],
