@@ -540,7 +540,8 @@ trait SelfUpdateTrait
             return $error_code;
         }
 
-        if ($this->getCurrentRelease() !== 'RELEASE') {
+        // Only apply when compiled.
+        if (config('app.production', false)) {
             // Replace with the new binary.
             rename($temp_binary_path, $current_binary_path);
         }
@@ -579,7 +580,7 @@ trait SelfUpdateTrait
             return 1;
         }
 
-        if ($this->getCurrentRelease() === 'RELEASE') {
+        if (!config('app.production', false)) {
             return;
         }
 
