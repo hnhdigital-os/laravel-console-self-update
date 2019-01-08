@@ -42,6 +42,7 @@ class SelfUpdateTest extends TestCase
         $command->setCurrentTag('1.0.0');
 
         $this->assertEquals('mysql-helper.1.0.0', $command->getBackupPath('mysql-helper'));
+        $this->assertNotEquals('mysql-helper.1.0.0', $command->getBackupPath('mysql-helper1'));
     }
 
     public function testTempPath()
@@ -49,6 +50,7 @@ class SelfUpdateTest extends TestCase
         $command = new MockCommand();
 
         $this->assertEquals('/tmp/mysql-helper.1.0.0', $command->getTempPath('mysql-helper', '1.0.0'));
+        $this->assertNotEquals('/tmp/mysql-helper.1.0.0', $command->getTempPath('mysql-helper', '1.0.1'));
     }
 
     public function testLatestTagPath()
@@ -59,6 +61,7 @@ class SelfUpdateTest extends TestCase
 
         $command->setLatestTagPath('latest.json');
         $this->assertEquals('latest.json', $command->getLatestTagPath());
+        $this->assertNotEquals('latest1.json', $command->getLatestTagPath());
     }
 
     public function testVersionsPath()
@@ -69,6 +72,7 @@ class SelfUpdateTest extends TestCase
 
         $command->setVersionsPath('version.json');
         $this->assertEquals('version.json', $command->getVersionsPath());
+        $this->assertNotEquals('version1.json', $command->getVersionsPath());
     }
 
     public function testHashFromString()
@@ -77,6 +81,11 @@ class SelfUpdateTest extends TestCase
         $this->assertEquals(
             '9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08',
             $command->getHashFromString('test')
+        );
+
+        $this->assertNotEquals(
+            '9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08',
+            $command->getHashFromString('test1')
         );
     }
 
